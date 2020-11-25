@@ -74,7 +74,10 @@ class Param_GUI(QMainWindow):
         hParamDict["fileDir"] = self.le_fileDir.text()
         hParamDict["t1MapDir"] = self.le_t1MapDir.text()
         hParamDict["modelName"] = self.le_modelName.text()
-        hParamDict["load"] = bool(self.cb_load.currentText())
+        if self.cb_load.currentText() == "False":
+            hParamDict["load"] = False
+        else:
+            hParamDict["load"] = True
         hParamDict["lr"] = float(self.s_lr.text())
         hParamDict["b1"] = float(self.s_b1.text())
         hParamDict["batchSize"] = int(self.s_batchSize.text())

@@ -92,6 +92,7 @@ else:
 
 figDir = "{}Training_Figures/".format(modelDir)
 os.makedirs(figDir)
+print(load,type(load))
 
 meanT1 = 362.66540459
 stdT1 = 501.85027392
@@ -103,9 +104,9 @@ norm = Normalise()
 trnsInTrain = transforms.Compose([toT,norm,rA])
 trnsInVal = transforms.Compose([toT,norm])
 
-datasetTrain = T1_Train_Dataset(fileDir=fileDir,t1MapDir=t1MapDir,size=10000,transform=trnsInTrain,load=load)
-datasetVal = T1_Val_Dataset(fileDir=fileDir,t1MapDir=t1MapDir,size=1000,transform=trnsInVal,load=load)
-datasetTest = T1_Test_Dataset(fileDir=fileDir,t1MapDir=t1MapDir,size=1000,transform=trnsInVal,load=load)
+datasetTrain = T1_Train_Dataset(fileDir=fileDir,t1MapDir=t1MapDir,size=200,transform=trnsInTrain,load=load)
+datasetVal = T1_Val_Dataset(fileDir=fileDir,t1MapDir=t1MapDir,size=50,transform=trnsInVal,load=load)
+datasetTest = T1_Test_Dataset(fileDir=fileDir,t1MapDir=t1MapDir,size=50,transform=trnsInVal,load=load)
 
 loaderTrain = DataLoader(datasetTrain,batch_size=bSize,shuffle=True,collate_fn=collate_fn,pin_memory=False)
 loaderVal = DataLoader(datasetVal,batch_size=bSize,shuffle=False,collate_fn=collate_fn,pin_memory=False)

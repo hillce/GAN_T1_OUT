@@ -146,7 +146,7 @@ for nE in range(numEpochs):
 
         outT1 = netG(inpData)
 
-        label = torch.full((bSize),1.0,device=device)
+        label = torch.full((bSize,),1.0,device=device)
         
         realOutD = netD(outGT)
         fakeOutD = netD(outT1)
