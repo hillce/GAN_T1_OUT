@@ -69,7 +69,7 @@ class Param_GUI(QMainWindow):
         self.setCentralWidget(self.main_widget)
         self.show()
 
-    def confirm_n_close(self,*args,**kwargs):
+    def confirm_n_close(self):
         hParamDict = {}
         hParamDict["fileDir"] = self.le_fileDir.text()
         hParamDict["t1MapDir"] = self.le_t1MapDir.text()
