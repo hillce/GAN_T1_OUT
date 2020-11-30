@@ -14,7 +14,7 @@ class Generator(nn.Module):
     """
     Generator network for recreating the missing image in the sequence of T1,T2,PDFF maps etc.
     """
-    def __init__(self,nC,xDim=128,yDim=128):
+    def __init__(self,nC,xDim=128,yDim=128,outC=1):
         super(Generator,self).__init__()
         self.nC = nC
 
@@ -29,7 +29,7 @@ class Generator(nn.Module):
         self.up4 = UpConv(128,64)
         self.outConv1 = nn.Conv2d(64,32,kernel_size=1)
         self.outConv2 = nn.Conv2d(32,16,kernel_size=1)
-        self.outConv3 = nn.Conv2d(16,1,kernel_size=1)
+        self.outConv3 = nn.Conv2d(16,outC,kernel_size=1)
 
     def forward(self,x):
         x = self.inConv(x)

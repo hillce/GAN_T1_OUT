@@ -12,7 +12,7 @@ class T1_Train_Dataset(Dataset):
     """
     T1 Dataset
     """
-    def __init__(self,size=2000,fileDir="C:/fully_split_data/",t1MapDir="C:/T1_Maps/",load=True,transform=None):
+    def __init__(self,size=2000,fileDir="C:/fully_split_data/",t1MapDir="C:/T1_Maps/",load=True,transform=None,loadDir="trainSet.npy"):
         self.fileDir = fileDir
         self.t1MapDir = t1MapDir
         self.transform = transform
@@ -22,7 +22,7 @@ class T1_Train_Dataset(Dataset):
             self.trainSet = np.random.choice(subjList,size)
             np.save("trainSet",self.trainSet)
         else:
-            self.trainSet = np.load("trainSet.npy")
+            self.trainSet = np.load(loadDir)
 
     def __getitem__(self, index):
 
@@ -43,7 +43,7 @@ class T1_Val_Dataset(Dataset):
     """
     T1 Dataset
     """
-    def __init__(self,size=500,fileDir="C:/fully_split_data/",t1MapDir="C:/T1_Maps/",load=True,transform=None):
+    def __init__(self,size=500,fileDir="C:/fully_split_data/",t1MapDir="C:/T1_Maps/",load=True,transform=None,loadDir="valSet.npy"):
         self.fileDir = fileDir
         self.t1MapDir = t1MapDir
         self.transform = transform
@@ -55,7 +55,7 @@ class T1_Val_Dataset(Dataset):
             self.valSet = np.random.choice(subjList,size)
             np.save("valSet",self.valSet)
         else:
-            self.valSet = np.load("valSet.npy")
+            self.valSet = np.load(loadDir)
 
     def __getitem__(self, index):
 
@@ -76,7 +76,7 @@ class T1_Test_Dataset(Dataset):
     """
     T1 Dataset
     """
-    def __init__(self,size=500,fileDir="C:/fully_split_data/",t1MapDir="C:/T1_Maps/",load=True,transform=None):
+    def __init__(self,size=500,fileDir="C:/fully_split_data/",t1MapDir="C:/T1_Maps/",load=True,transform=None,loadDir="testSet.npy"):
         self.fileDir = fileDir
         self.t1MapDir = t1MapDir
         self.transform = transform
@@ -89,7 +89,7 @@ class T1_Test_Dataset(Dataset):
             self.testSet = np.random.choice(subjList,size)
             np.save("testSet",self.testSet)
         else:
-            self.testSet = np.load("testSet.npy")
+            self.testSet = np.load(loadDir)
 
     def __getitem__(self, index):
 

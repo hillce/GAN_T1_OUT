@@ -67,7 +67,8 @@ else:
     modelName = args.modelName
     bSize = args.batchSize
 
-    modelDir = "./TrainingLogs/{}/".format(modelName)
+    modelDir = "./Temp2/{}/".format(modelName)
+    # modelDir = "./TrainingLogs/{}/".format(modelName)
     assert os.path.isdir(modelDir), "Model Directory is not found, please check your model name!"
 
 
@@ -139,6 +140,24 @@ with torch.no_grad():
             fig.colorbar(im,ax=ax[2])
             ax[2].axis('off')
             plt.savefig("{}i_{}_img.png".format(figDir,i+1))
+            
+            plt.figure()
+            # Percentage Error
+            perErrMap = (abs(outT1-outGT)+outGT)/outGT
+            perErrMap = (perErrMap - 1)*100
+
+            for i in range(perErrMap.shape[0]):
+                for j in range(perErrMap.shape[1]):
+                    if perErrMap[i,j] == np.inf:
+                        perErrMap[i,j] = 0
+
+
+
+            plt.imshow(perErrMap,vmax=20,cmap="jet")
+            plt.colorbar()
+            plt.show()
+
+
 
             plt.figure()
             plt.plot(lossArr[:i,0],lossArr[:i,1])
