@@ -12,15 +12,16 @@ class T1_Train_Dataset(Dataset):
     """
     T1 Dataset
     """
-    def __init__(self,size=2000,fileDir="C:/fully_split_data/",t1MapDir="C:/T1_Maps/",load=True,transform=None,loadDir="trainSet.npy"):
+    def __init__(self,modelName,size=2000,fileDir="C:/fully_split_data/",t1MapDir="C:/T1_Maps/",load=True,transform=None,loadDir="trainSet.npy"):
         self.fileDir = fileDir
         self.t1MapDir = t1MapDir
         self.transform = transform
+        self.modelDir = "./TrainingLogs/{}/".format(modelName)
 
         if not load:
             subjList = [x[:7] for x in os.listdir(fileDir) if x.endswith("0.npy") if os.path.isfile("{}{}_20204_2_0.mat".format(t1MapDir,x[:7]))]
             self.trainSet = np.random.choice(subjList,size)
-            np.save("trainSet",self.trainSet)
+            np.save("{}trainSet".format(self.modelDir),self.trainSet)
         else:
             self.trainSet = np.load(loadDir)
 
@@ -43,17 +44,18 @@ class T1_Val_Dataset(Dataset):
     """
     T1 Dataset
     """
-    def __init__(self,size=500,fileDir="C:/fully_split_data/",t1MapDir="C:/T1_Maps/",load=True,transform=None,loadDir="valSet.npy"):
+    def __init__(self,modelName,size=500,fileDir="C:/fully_split_data/",t1MapDir="C:/T1_Maps/",load=True,transform=None,loadDir="valSet.npy"):
         self.fileDir = fileDir
         self.t1MapDir = t1MapDir
         self.transform = transform
+        self.modelDir = "./TrainingLogs/{}/".format(modelName)
 
         if not load:
             subjList = [x[:7] for x in os.listdir(fileDir) if x.endswith("0.npy") if os.path.isfile("{}{}_20204_2_0.mat".format(t1MapDir,x[:7]))]
             self.trainSet = np.load("trainSet.npy")
             subjList = [x for x in subjList if x not in self.trainSet]
             self.valSet = np.random.choice(subjList,size)
-            np.save("valSet",self.valSet)
+            np.save("{}valSet".format(self.modelDir),self.valSet)
         else:
             self.valSet = np.load(loadDir)
 
@@ -76,10 +78,11 @@ class T1_Test_Dataset(Dataset):
     """
     T1 Dataset
     """
-    def __init__(self,size=500,fileDir="C:/fully_split_data/",t1MapDir="C:/T1_Maps/",load=True,transform=None,loadDir="testSet.npy"):
+    def __init__(self,modelName,size=500,fileDir="C:/fully_split_data/",t1MapDir="C:/T1_Maps/",load=True,transform=None,loadDir="testSet.npy"):
         self.fileDir = fileDir
         self.t1MapDir = t1MapDir
         self.transform = transform
+        self.modelDir = "./TrainingLogs/{}/".format(modelName)
 
         if not load:
             subjList = [x[:7] for x in os.listdir(fileDir) if x.endswith("0.npy") if os.path.isfile("{}{}_20204_2_0.mat".format(t1MapDir,x[:7]))]
@@ -87,7 +90,7 @@ class T1_Test_Dataset(Dataset):
             self.valSet = np.load("valSet.npy")
             subjList = [x for x in subjList if x not in self.trainSet and x not in self.valSet]
             self.testSet = np.random.choice(subjList,size)
-            np.save("testSet",self.testSet)
+            np.save("{}testSet".format(self.modelDir),self.testSet)
         else:
             self.testSet = np.load(loadDir)
 

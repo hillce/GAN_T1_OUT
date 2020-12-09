@@ -11,59 +11,38 @@ from torch.utils.data import DataLoader, Dataset
 import torch.multiprocessing as mp
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
-# from PyQt5 import QApplication
 
 from datasets import T1_Train_Dataset, T1_Val_Dataset, T1_Test_Dataset, Random_Affine, ToTensor, Normalise, collate_fn
 from models import Generator, Discriminator
-# from train_utils import count_parameters, get_meta, training_update, plot_grid
-# from param_gui import Param_GUI
 
+############################ Training Preamble ###########################################################################
 # Arg parser so I can test out different model parameters
 parser = argparse.ArgumentParser(description="Training program for T1 map generation")
-parser.add_argument("--dir",help="File directory for numpy images",type=str,default="C:/fully_split_data/",dest="fileDir")
-parser.add_argument("--t1dir",help="File directory for T1 matfiles",type=str,default="C:/T1_Maps/",dest="t1MapDir")
 parser.add_argument("--model_name",help="Name for saving the model",type=str,dest="modelName",required=True)
-parser.add_argument("--load",help="Load the preset trainSets, or redistribute (Bool)",default=False,action='store_true',dest="load")
-parser.add_argument("-lr",help="Learning rate for the optimizer",type=float,default=1e-3,dest="lr")
-parser.add_argument("-b1",help="Beta 1 for the Adam optimizer",type=float,default=0.5,dest="b1")
-parser.add_argument("-bSize","--batch_size",help="Batch size for dataloader",type=int,default=4,dest="batchSize")
-parser.add_argument("-nE","--num_epochs",help="Number of Epochs to train for",type=int,default=50,dest="numEpochs")
-parser.add_argument("--step_size",help="Step size for learning rate decay",type=int,default=5,dest="stepSize")
-parser.add_argument("--gui",help="Use GUI to pick out parameters (WIP)",type=bool,default=False,dest="gui")
-
 args = parser.parse_args()
 
-fileDir = args.fileDir
-t1MapDir = args.t1MapDir
 modelName = args.modelName
-load = args.load
-lr = args.lr
-b1 = args.b1
-bSize = args.batchSize
-numEpochs = args.numEpochs
-stepSize = args.stepSize
 
 modelDir = "./TrainingLogs/{}/".format(modelName)
-os.makedirs(modelDir)
+with open("{}hparams.json".format(modelDir),"r") as f:
+    hParamDict = json.load(f)
 
-hParamDict = {}
-hParamDict["fileDir"] = fileDir
-hParamDict["t1MapDir"] = t1MapDir
-hParamDict["modelName"] = modelName
-hParamDict["load"] = load
-hParamDict["lr"] = lr
-hParamDict["b1"] = b1
-hParamDict["batchSize"] = bSize
-hParamDict["numEpochs"] = numEpochs
-hParamDict["stepSize"] = stepSize
+fileDir = hParamDict["fileDir"]
+t1MapDir = hParamDict["t1MapDir"]
+# load = hParamDict["load"]
+load = True
+lr = hParamDict["lr"]
+b1 = hParamDict["b1"]
+bSize = hParamDict["batchSize"]
+bSize = 8
+numEpochs = hParamDict["numEpochs"]
+stepSize = hParamDict["stepSize"]
+norm = hParamDict["norm"]
 
-with open("{}hparams.json".format(modelDir),"w") as f:
-    json.dump(hParamDict,f)
+########################################################################################################################
+############################## Model Setup #############################################################################
 
 writer = SummaryWriter("{}tensorboard".format(modelDir))
-
-figDir = "{}Training_Figures/".format(modelDir)
-os.makedirs(figDir)
 
 meanT1 = 362.66540459
 stdT1 = 501.85027392
@@ -94,6 +73,11 @@ netLoss.load_state_dict(netLossDict["Generator_state_dict"])
 
 for param in netLoss.parameters():
     param.requires_grad = False
+netLoss.eval()
+
+modelDict = torch.load("{}model.pt".format(modelDir))
+netG.load_state_dict(modelDict["Generator_state_dict"])
+netD.load_state_dict(modelDict["Discriminator_state_dict"])
 
 netG = netG.to(device)
 netD = netD.to(device)
@@ -109,17 +93,19 @@ T1_loss = nn.SmoothL1Loss()
 optim_G = torch.optim.Adam(netG.parameters(), lr=lr, betas=(b1,0.999))
 optim_D = torch.optim.Adam(netD.parameters(), lr=lr, betas=(b1,0.999))
 
+optim_G.load_state_dict(modelDict["Generator_optimizer"])
+optim_D.load_state_dict(modelDict["Discriminator_state_dict"])
+
 trainLen = datasetTrain.__len__()
 valLen = datasetVal.__len__()
 
 lowestLoss = 1000000000000000.0
 trainLossCnt = 0
 valLossCnt = 0
-
 #####################################################################################################
 #################### Start Training #################################################################
 
-for epoch in range(numEpochs):
+for nE in range(modelDict["Epoch"],numEpochs):
     for ii, data in enumerate(loaderTrain):
         inpData = data["Images"]
         t1GT = data["T1Map"].to(device)
@@ -176,7 +162,6 @@ for epoch in range(numEpochs):
 
         optim_G.step()
 
-        sys.stdout.write("\r[{}/{}]".format(ii,trainLen))
     with torch.no_grad():
         valLoss = 0.0
         for ii, data in enumerate(loaderVal):
@@ -192,7 +177,7 @@ for epoch in range(numEpochs):
             inpData = inpData.to(device)
             knImgs = knImgs.to(device)
 
-            label = torch.full((inpData.size()[0],),real_label,device=device)
+            label = torch.full((inpData.size()[0],),real_label,device=device,dtype=torch.float)
             real_out = netD(inpData).view(-1)
 
             errD_real = disc_loss(real_out,label)
@@ -221,8 +206,8 @@ for epoch in range(numEpochs):
 
         valLoss /= valLen
 
-        if epoch == 0:
-            torch.save({"Epoch":epoch+1,
+        if nE == 0:
+            torch.save({"Epoch":nE+1,
             "Generator_state_dict":netG.state_dict(),
             "Discriminator_state_dict":netD.state_dict(),
             "Generator_optimizer":optim_G.state_dict(),
@@ -231,7 +216,7 @@ for epoch in range(numEpochs):
             lowestLoss = valLoss
         else:
             if valLoss < lowestLoss:
-                torch.save({"Epoch":epoch+1,
+                torch.save({"Epoch":nE+1,
                 "Generator_state_dict":netG.state_dict(),
                 "Discriminator_state_dict":netD.state_dict(),
                 "Generator_optimizer":optim_G.state_dict(),

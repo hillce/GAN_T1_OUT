@@ -11,12 +11,11 @@ from torch.utils.data import DataLoader, Dataset
 import torch.multiprocessing as mp
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
-# from PyQt5 import QApplication
 
 from datasets import T1_Train_Dataset, T1_Val_Dataset, T1_Test_Dataset, Random_Affine, ToTensor, Normalise, collate_fn
 from models import Generator, Discriminator
 # from train_utils import count_parameters, get_meta, training_update, plot_grid
-# from param_gui import Param_GUI
+
 
 # Arg parser so I can test out different model parameters
 parser = argparse.ArgumentParser(description="Training program for T1 map generation")
@@ -64,6 +63,7 @@ writer = SummaryWriter("{}tensorboard".format(modelDir))
 
 figDir = "{}Training_Figures/".format(modelDir)
 os.makedirs(figDir)
+print(load,type(load))
 
 meanT1 = 362.66540459
 stdT1 = 501.85027392
@@ -94,6 +94,7 @@ netLoss.load_state_dict(netLossDict["Generator_state_dict"])
 
 for param in netLoss.parameters():
     param.requires_grad = False
+netLoss.eval()
 
 netG = netG.to(device)
 netD = netD.to(device)
@@ -176,7 +177,6 @@ for epoch in range(numEpochs):
 
         optim_G.step()
 
-        sys.stdout.write("\r[{}/{}]".format(ii,trainLen))
     with torch.no_grad():
         valLoss = 0.0
         for ii, data in enumerate(loaderVal):
@@ -192,7 +192,7 @@ for epoch in range(numEpochs):
             inpData = inpData.to(device)
             knImgs = knImgs.to(device)
 
-            label = torch.full((inpData.size()[0],),real_label,device=device)
+            label = torch.full((inpData.size()[0],),real_label,device=device,dtype=torch.float)
             real_out = netD(inpData).view(-1)
 
             errD_real = disc_loss(real_out,label)
