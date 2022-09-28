@@ -3,3 +3,4 @@ venv
 TrainFigures
 TrainingLogs
 models
+__pycache__
