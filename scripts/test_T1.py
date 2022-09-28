@@ -1,31 +1,29 @@
-import os, sys, json
 import argparse
+import json
+import os
+import sys
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import torch.nn as nn
+import torchvision.transforms as transforms
+from param_gui import Param_GUI
+from PyQt5.QtWidgets import QApplication
+from scipy.io import loadmat
 from torch import optim
 from torch.utils.data import DataLoader
-import torch.nn as nn
-from scipy.io import loadmat
-import matplotlib.pyplot as plt
-import torchvision.transforms as transforms
-from PyQt5.QtWidgets import QApplication
 
+from datasets import (Normalise, Random_Affine, T1_Test_Dataset,
+                      T1_Train_Dataset, T1_Val_Dataset, ToTensor, collate_fn)
 from models import Discriminator, Generator
-from datasets import T1_Train_Dataset, T1_Val_Dataset, T1_Test_Dataset, Random_Affine, ToTensor, Normalise, collate_fn
-from param_gui import Param_GUI
 
 # Arg parser so I can test out different model parameters
 parser = argparse.ArgumentParser(description="Training program for T1 map generation")
 parser.add_argument("--dir",help="File directory for numpy images",type=str,default="C:/fully_split_data/",dest="fileDir")
 parser.add_argument("--t1dir",help="File directory for T1 matfiles",type=str,default="C:/T1_Maps/",dest="t1MapDir")
 parser.add_argument("--model_name",help="Name for saving the model",type=str,dest="modelName",required=True)
-# parser.add_argument("--load",help="Load the preset trainSets, or redistribute (Bool)",default=False,action='store_true',dest="load")
-# parser.add_argument("-lr",help="Learning rate for the optimizer",type=float,default=1e-3,dest="lr")
-# parser.add_argument("-b1",help="Beta 1 for the Adam optimizer",type=float,default=0.5,dest="b1")
 parser.add_argument("-bSize","--batch_size",help="Batch size for dataloader",type=int,default=4,dest="batchSize")
-# parser.add_argument("-nE","--num_epochs",help="Number of Epochs to train for",type=int,default=50,dest="numEpochs")
-# parser.add_argument("--step_size",help="Step size for learning rate decay",type=int,default=5,dest="stepSize")
 parser.add_argument("--gui",help="Use GUI to pick out parameters (WIP)",default=False,action='store_true',dest="gui")
 
 args = parser.parse_args()
@@ -68,7 +66,6 @@ else:
     bSize = args.batchSize
 
     modelDir = "./TrainingLogs/{}/".format(modelName)
-    # modelDir = "./TrainingLogs/{}/".format(modelName)
     assert os.path.isdir(modelDir), "Model Directory is not found, please check your model name!"
 
 
@@ -83,7 +80,6 @@ meanT1 = 362.66540459
 stdT1 = 501.85027392
 
 toT = ToTensor()
-# norm = Normalise()
 
 trnsInVal = transforms.Compose([toT])
 
@@ -92,9 +88,7 @@ loaderTest = DataLoader(datasetTest,batch_size=bSize,shuffle=False,collate_fn=co
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 netG = Generator(7,288,384)
-# netD = Discriminator(1,288,384)
 netG = netG.to(device)
-# netD = netD.to(device)
 
 modelDict = torch.load("{}model.pt".format(modelDir))
 netG.load_state_dict(modelDict["Generator_state_dict"])

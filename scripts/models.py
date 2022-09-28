@@ -2,12 +2,13 @@
 # Charles E Hill
 # 21/10/2020
 
+from collections import OrderedDict
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from collections import OrderedDict
 
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 # Classic Generator Models
 
 class Generator(nn.Module):
@@ -139,14 +140,3 @@ class UpConv(nn.Module):
 
         x = torch.cat([x2, x1], dim=1)
         return self.conv(x)
-
-if __name__ == "__main__":
-    rand = torch.randn((4,7,144,192))
-    rand_meta = torch.randn((4,7))
-
-    net = Generator(7,xDim=288,yDim=384)
-
-    writer = SummaryWriter('./logs/Test')
-    writer.add_graph(net,rand)
-    writer.flush()
-    writer.close()
